@@ -1,0 +1,1 @@
+gunicorn exam_project.wsgi:application
