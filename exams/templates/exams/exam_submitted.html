@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5 text-center">
+    <div class="card shadow-sm p-5">
+        <h2 class="text-success">✅ Exam Submitted Successfully!</h2>
+        <p>Your answers for <strong>{{ exam.title }}</strong> have been recorded.</p>
+        <a href="{% url 'exam_list' %}" class="btn btn-primary btn-lg mt-3">Back to Exams</a>
+    </div>
+</div>
+{% endblock %}

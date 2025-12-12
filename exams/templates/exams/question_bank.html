@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Question Bank</h2>
+        <a href="{% url 'create_question' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Question
+        </a>
+    </div>
+
+    {% if questions %}
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Question</th>
+                        <th>Type</th>
+                        <th>Marks</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for q in questions %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+
+                        <td style="max-width: 450px;">
+                            {{ q.question_text|truncatewords:12 }}
+                        </td>
+
+                        <td>
+                            {% if q.question_type == "mcq" %}
+                                <span class="badge bg-info">MCQ</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Written</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ q.marks }}</td>
+
+                        <td class="text-center">
+                            <a href="{% url 'edit_question' q.id %}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <a href="{% url 'delete_question' q.id %}" 
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('Delete this question?');">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="alert alert-info text-center mt-3">
+        No questions added yet.
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

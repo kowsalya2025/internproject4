@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Contact Teacher{% endblock %}
+
+{% block content %}
+<h1>Contact a Teacher</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <label for="teacher">Select Teacher:</label>
+    <select name="teacher" id="teacher" required>
+        <option value="">--Select--</option>
+        {% for teacher in teachers %}
+            <option value="{{ teacher.id }}">{{ teacher.get_full_name|default:teacher.username }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="subject">Subject:</label>
+    <input type="text" name="subject" id="subject" required>
+
+    <label for="message">Message:</label>
+    <textarea name="message" id="message" rows="5" required></textarea>
+
+    <button type="submit">Send Message</button>
+</form>
+
+{% if messages %}
+    {% for msg in messages %}
+        <p>{{ msg }}</p>
+    {% endfor %}
+{% endif %}
+{% endblock %}

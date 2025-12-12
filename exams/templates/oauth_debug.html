@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OAuth Debug</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>OAuth Configuration Debug</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <tr>
+                    <th>Provider</th>
+                    <th>Client ID (first 10 chars)</th>
+                    <th>Client Secret</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <td>Google</td>
+                    <td><code>{{ google_key }}</code></td>
+                    <td>{{ google_secret }}</td>
+                    <td>
+                        {% if google_key != 'Not set' %}
+                        <span class="badge bg-info">Configured</span>
+                        {% else %}
+                        <span class="badge bg-danger">Not Configured</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Microsoft</td>
+                    <td><code>{{ microsoft_key }}</code></td>
+                    <td>{{ microsoft_secret }}</td>
+                    <td>
+                        {% if microsoft_key != 'Not set' %}
+                        <span class="badge bg-info">Configured</span>
+                        {% else %}
+                        <span class="badge bg-danger">Not Configured</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>GitHub</td>
+                    <td><code>{{ github_key }}</code></td>
+                    <td>{{ github_secret }}</td>
+                    <td>
+                        {% if github_key != 'Not set' %}
+                        <span class="badge bg-success">Working ✓</span>
+                        {% else %}
+                        <span class="badge bg-danger">Not Configured</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="mt-4">
+                <h5>Test Links:</h5>
+                <div class="btn-group">
+                    <a href="{% url 'social:begin' 'google-oauth2' %}" class="btn btn-primary">
+                        Test Google Login
+                    </a>
+                    <a href="{% url 'social:begin' 'microsoft-graph' %}" class="btn btn-success">
+                        Test Microsoft Login
+                    </a>
+                    <a href="{% url 'social:begin' 'github' %}" class="btn btn-dark">
+                        Test GitHub Login
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-4 alert alert-info">
+                <h6>Debug Mode: {{ debug }}</h6>
+                <p class="mb-0">If Google/Microsoft aren't working, check:</p>
+                <ul class="mb-0">
+                    <li>Credentials are correctly set in environment variables</li>
+                    <li>Redirect URIs match exactly in developer console</li>
+                    <li>App is published (for Google) or in production (for Microsoft)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

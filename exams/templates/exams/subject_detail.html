@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ subject.name }} - Subject Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <!-- Subject Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold">{{ subject.name }}</h2>
+      <small class="text-muted">Department: {{ subject.department }}</small>
+    </div>
+    <div>
+      <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Subject Description -->
+  {% if subject.description %}
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <p class="mb-0">{{ subject.description }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Exams List -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">📝 Exams for this Subject</h5>
+      <small class="text-muted">Total: {{ subject.exams.count }}</small>
+    </div>
+    <div class="card-body">
+      {% if subject.exams.exists %}
+        <div class="list-group">
+          {% for exam in subject.exams.all %}
+            <div class="list-group-item list-group-item-action mb-2 p-3 shadow-sm rounded animate__animated animate__fadeInUp">
+              <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-3">
+                
+                <div class="me-3" style="min-width: 200px;">
+                  <h6 class="mb-1">{{ exam.title }}</h6>
+                  <p class="mb-1 text-muted">{{ exam.description|truncatechars:100 }}</p>
+                  <p class="mb-0 small text-muted">
+                    <strong>Start:</strong> {{ exam.start_time|date:"M d, Y H:i" }} &nbsp; • &nbsp;
+                    <strong>End:</strong> {{ exam.end_time|date:"M d, Y H:i" }}
+                  </p>
+                </div>
+
+                <div class="d-flex flex-column justify-content-between">
+                  <div class="mb-2">
+                    <a href="{% url 'exam_detail' exam.id %}" class="btn btn-sm btn-outline-secondary mb-1">Details</a>
+                    {% if exam.is_active and exam.start_time <= now <= exam.end_time %}
+                      <a href="{% url 'take_exam' exam.id %}" class="btn btn-sm btn-primary mb-1">Take Exam</a>
+                    {% elif exam.start_time > now %}
+                      <button class="btn btn-sm btn-light mb-1" disabled>Upcoming</button>
+                    {% else %}
+                      <span class="badge bg-secondary mb-1">Ended</span>
+                    {% endif %}
+                  </div>
+                  <div>
+                    <span class="badge bg-light text-dark me-1">Questions: {{ exam.questions.count }}</span>
+                    <span class="badge bg-light text-dark">Duration: {{ exam.duration }} mins</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-4">
+          <img src="{% static 'exams/empty_state.svg' %}" alt="No exams" style="max-width:200px;" class="mb-3">
+          <p class="text-muted">No exams created for this subject yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Optional animation CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+{% endblock %}

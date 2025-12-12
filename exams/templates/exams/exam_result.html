@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0"><i class="bi bi-check-circle"></i> Exam Submitted Successfully</h3>
+                </div>
+
+                <div class="card-body">
+
+                    {% if attempt %}
+                        <!-- Exam Summary -->
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <h4>{{ attempt.exam.title }}</h4>
+                                <p class="text-muted">
+                                    {{ attempt.exam.subject }} • {{ total_questions }} questions • {{ attempt.exam.total_marks }} total marks
+                                </p>
+                                <p>
+                                    <i class="bi bi-calendar"></i>
+                                    Submitted on:
+                                    {{ attempt.submitted_at|default_if_none:attempt.end_time|date:"F d, Y H:i A" }}
+                                </p>
+                            </div>
+
+                            <div class="col-md-4 text-end">
+                                <div class="display-4 fw-bold
+                                    {% if attempt.percentage >= 70 %}
+                                        text-success
+                                    {% elif attempt.percentage >= 50 %}
+                                        text-warning
+                                    {% else %}
+                                        text-danger
+                                    {% endif %}
+                                ">
+                                    {{ attempt.percentage|floatformat:1 }}%
+                                </div>
+
+                                <p class="lead">
+                                    Score:
+                                    {{ attempt.score }}/{{ attempt.exam.total_marks }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Detailed Results -->
+                        <h5>Detailed Results:</h5>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                <tr>
+                                    <th>Question</th>
+                                    <th>Type</th>
+                                    <th>Your Answer</th>
+                                    <th>Marks</th>
+                                    <th>Status</th>
+                                </tr>
+                                </thead>
+
+                                <tbody>
+                                {% for answer in answers %}
+                                    <tr>
+
+                                        <!-- Question Text -->
+                                        <td>{{ answer.question.question_text|truncatechars:50 }}</td>
+
+                                        <!-- Question Type -->
+                                        <td>
+                                            <span class="badge 
+                                                {% if answer.question.question_type == 'mcq' %}bg-primary
+                                                {% elif answer.question.question_type == 'true_false' %}bg-info
+                                                {% else %}bg-warning
+                                                {% endif %}
+                                            ">
+                                                {{ answer.question.get_question_type_display }}
+                                            </span>
+                                        </td>
+
+                                        <!-- Your Answer -->
+                                        <td>
+                                            {% if answer.selected_choice %}
+                                                {{ answer.selected_choice.choice_text }}
+
+                                            {% elif answer.text_answer %}
+                                                {{ answer.text_answer|truncatechars:40 }}
+
+                                            {% else %}
+                                                <span class="text-muted">Not Answered</span>
+                                            {% endif %}
+                                        </td>
+
+                                        <!-- Marks -->
+                                        <td>
+                                            {{ answer.marks_obtained|default:"0" }}/{{ answer.question.marks }}
+                                        </td>
+
+                                        <!-- Status -->
+                                        <td>
+                                            {% if answer.question.question_type == 'short' %}
+                                                {% if answer.marks_obtained == 0 %}
+                                                    <span class="badge bg-secondary">Pending Grading</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Scored</span>
+                                                {% endif %}
+
+                                            {% elif answer.selected_choice and answer.selected_choice.is_correct %}
+                                                <span class="badge bg-success">Correct</span>
+
+                                            {% elif answer.selected_choice %}
+                                                <span class="badge bg-danger">Incorrect</span>
+
+                                            {% else %}
+                                                <span class="badge bg-secondary">Not Answered</span>
+                                            {% endif %}
+                                        </td>
+
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <a href="{% url 'student_dashboard' %}" class="btn btn-primary">
+                                <i class="bi bi-house"></i> Return to Dashboard
+                            </a>
+                            <a href="#" class="btn btn-outline-secondary">
+                                <i class="bi bi-download"></i> Download Report
+                            </a>
+                        </div>
+
+                    {% else %}
+                        <div class="alert alert-warning text-center">
+                            <i class="bi bi-exclamation-triangle"></i> No exam attempt found.
+                        </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-lg-4">
+            <div class="sidebar-card" data-aos="fade-left">
+                <h6 class="sidebar-title">
+                    <i class="bi bi-clock-history me-2"></i>Recent Attempts
+                </h6>
+
+                {% if completed_attempts %}
+                    {% for recent in completed_attempts|slice:":6" %}
+                        <div class="attempt-item mb-2 p-2 border rounded">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>{{ recent.exam.title }}</strong><br>
+                                    <small>
+                                        {{ recent.submitted_at|default_if_none:recent.end_time|date:"M d, Y H:i" }}
+                                    </small>
+                                </div>
+
+                                <div class="text-end">
+                                    <div class="fw-bold">{{ recent.percentage|floatformat:1 }}%</div>
+                                    <a href="{% url 'exam_result' recent.id %}" class="small">
+                                        View Result <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        You haven't completed any attempts yet.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+

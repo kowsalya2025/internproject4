@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Teacher{% endblock %}
+
+{% block content %}
+<style>
+    /* Container */
+    .contact-container {
+        max-width: 900px;
+        margin: 3rem auto;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
+        border-radius: 25px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+        animation: fadeInUp 1s ease forwards;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        0% { opacity: 0; transform: translateY(50px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 2.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        color: #334e68;
+        animation: fadeIn 1.2s ease forwards;
+    }
+
+    p.description {
+        text-align: center;
+        color: #555;
+        margin-bottom: 2rem;
+        animation: fadeIn 1.4s ease forwards;
+    }
+
+    @keyframes fadeIn {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+
+    /* Form */
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        animation: fadeIn 1.6s ease forwards;
+    }
+
+    select, input, textarea {
+        padding: 1rem;
+        border-radius: 15px;
+        border: 2px solid #cfd8e3;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        outline: none;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    select:hover, input:hover, textarea:hover,
+    select:focus, input:focus, textarea:focus {
+        border-color: #667eea;
+        box-shadow: 0 10px 20px rgba(102,126,234,0.2);
+        transform: translateY(-2px);
+    }
+
+    button {
+        padding: 1rem;
+        border: none;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        box-shadow: 0 10px 25px rgba(102,126,234,0.3);
+    }
+
+    button:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(102,126,234,0.4);
+        background: linear-gradient(135deg, #764ba2, #667eea);
+    }
+
+    label {
+        font-weight: 600;
+        color: #334e68;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    /* Success Message */
+    .success-message {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+        padding: 1rem 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        animation: fadeIn 1s ease forwards;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .contact-container {
+            margin: 2rem 1rem;
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<div class="contact-container">
+    <h1>Contact Your Teacher</h1>
+    <p class="description">Send your questions or doubts directly to your teacher securely.</p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="success-message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <label for="teacher">Select Teacher</label>
+        <select name="teacher" id="teacher" required>
+            <option value="">-- Select Teacher --</option>
+            {% for teacher in teachers %}
+                <option value="{{ teacher.id }}">
+                    {{ teacher.get_full_name|default:teacher.username }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="subject">Subject</label>
+        <input type="text" name="subject" id="subject" placeholder="Enter subject" required>
+
+        <label for="message">Message</label>
+        <textarea name="message" id="message" rows="5" placeholder="Type your message..." required></textarea>
+
+        <button type="submit">Send Message</button>
+    </form>
+</div>
+{% endblock %}
+
+

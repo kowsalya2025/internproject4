@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+.card { border-radius:12px; }
+.question-card { display:none; }
+.question-card.active { display:block; }
+.option-box { cursor:pointer; padding:10px; border:2px solid #dee2e6; border-radius:8px; transition:0.2s; }
+.option-box.selected { background:#e8f4ff; border-color:#0d6efd; }
+.answer-textarea { min-height:120px; resize:vertical; border:2px solid #dee2e6; border-radius:8px; padding:15px; }
+.answer-textarea:focus { border-color:#fd7e14; box-shadow:0 0 0 0.25rem rgba(253,126,20,0.25); }
+.progress-container { position:fixed; top:80px; right:20px; background:white; border-radius:12px; padding:15px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:1100; max-width:250px; }
+.question-nav-btn { width:35px;height:35px;border-radius:50%;border:2px solid #dee2e6;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.9rem;transition:0.2s; }
+.question-nav-btn:hover { background:#f8f9fa;border-color:#0d6efd;transform:scale(1.1); }
+.question-nav-btn.current { background:#0d6efd;color:white;border-color:#0d6efd; transform:scale(1.1);}
+.question-nav-btn.answered { background:#198754;color:white;border-color:#198754;}
+</style>
+
+<div class="container mt-4 mb-5">
+    <div class="progress-container d-none d-lg-block">
+        <h6 class="fw-bold mb-2">📊 Progress</h6>
+        <div class="d-flex justify-content-between mb-2">
+            <span>Questions</span>
+            <span id="answered-count">0</span>/{{ questions.count }}
+        </div>
+        <div class="progress mb-3" style="height:8px;">
+            <div id="progress-bar" class="progress-bar bg-success" style="width:0%"></div>
+        </div>
+        <div class="question-nav" id="question-nav">
+            {% for q in questions %}
+            <button type="button" class="question-nav-btn" data-question="{{ forloop.counter0 }}">{{ forloop.counter }}</button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card shadow mb-4 text-center p-3" style="background:linear-gradient(135deg,#198754,#0d6efd); color:white;">
+        <h2>{{ exam.title }}</h2>
+        <p>Subject: <strong>{{ exam.subject }}</strong> | Total: <strong>{{ questions.count }}</strong> | Duration: <strong>{{ exam.duration }} min</strong> | Marks: <strong>{{ exam.total_marks }}</strong></p>
+        <div class="mt-2 alert alert-warning d-inline-block" id="timer-container">⏱ Time Remaining: <span id="timer">00:00:00</span></div>
+    </div>
+
+    <div class="alert alert-info mb-4">
+        <ul class="mb-0">
+            <li>Click options for MCQs or type for short answers.</li>
+            <li>Use Next/Previous or question numbers to navigate.</li>
+            <li>Answers auto-save every 30 seconds.</li>
+        </ul>
+    </div>
+
+    <form method="POST" action="{% url 'submit_exam' exam.id %}" id="examForm">
+        {% csrf_token %}
+        {% for q in questions %}
+        <div class="card question-card mb-4" id="question-{{ forloop.counter0 }}">
+            <div class="card-body">
+                <h5>Q{{ forloop.counter }}. {{ q.question_text }}</h5>
+                {% if q.question_type == 'mcq' %}
+                    {% for choice in q.choices.all %}
+                    <label class="d-block mt-2">
+                        <input type="radio" name="question_{{ q.id }}" value="{{ choice.id }}" data-question-id="{{ forloop.parentloop.counter0 }}">
+                        {{ choice.choice_text }}
+                    </label>
+                    {% endfor %}
+                {% elif q.question_type == 'short' %}
+                    <textarea class="form-control mt-3" name="question_{{ q.id }}" data-question-id="{{ forloop.counter0 }}"></textarea>
+                {% elif q.question_type == 'tf' %}
+                    <label class="d-block mt-2"><input type="radio" name="question_{{ q.id }}" value="true" data-question-id="{{ forloop.counter0 }}"> True</label>
+                    <label class="d-block mt-2"><input type="radio" name="question_{{ q.id }}" value="false" data-question-id="{{ forloop.counter0 }}"> False</label>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="d-flex justify-content-between mt-4 mb-4">
+            <button type="button" class="btn btn-outline-primary" id="prevBtn">Previous</button>
+            <span class="badge bg-info">Question <span id="current-q">1</span> of {{ questions.count }}</span>
+            <button type="button" class="btn btn-outline-primary" id="nextBtn">Next</button>
+        </div>
+
+        <div class="text-center mt-5 mb-5">
+            <button type="button" class="btn btn-success btn-lg" id="submitBtn">✅ Submit Exam</button>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="loadingModal" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-4 text-center">
+      <div class="spinner-border text-primary mb-3"></div>
+      <h5>Submitting your exam...</h5>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const cards = Array.from(document.querySelectorAll('.question-card'));
+    const total = cards.length;
+    const examForm = document.getElementById('examForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingModalEl = document.getElementById('loadingModal');
+    const answeredCountEl = document.getElementById('answered-count');
+    const progressBarEl = document.getElementById('progress-bar');
+    const currentQEl = document.getElementById('current-q');
+    const navBtns = document.querySelectorAll('.question-nav-btn');
+    let current = 0;
+    const answeredSet = new Set();
+    const STORAGE_KEY = 'exam_{{ exam.id }}';
+    let timeLeft = parseInt('{{ exam.duration }}')*60;
+
+    function showQuestion(i){
+        if(i<0||i>=total) return;
+        cards.forEach(c=>c.classList.remove('active'));
+        cards[i].classList.add('active');
+        current=i;
+        currentQEl.textContent=i+1;
+        updateNav();
+        setTimeout(()=>cards[i].scrollIntoView({behavior:'smooth',block:'start'}),80);
+    }
+
+    function updateNav(){
+        answeredCountEl.textContent=answeredSet.size;
+        progressBarEl.style.width=Math.round((answeredSet.size/total)*100)+'%';
+        navBtns.forEach((btn,i)=>{
+            btn.classList.remove('answered','current');
+            if(answeredSet.has(i)) btn.classList.add('answered');
+            if(i===current) btn.classList.add('current');
+        });
+    }
+
+    function saveAnswers(){
+        const answers={};
+        document.querySelectorAll('input[type="radio"]').forEach(r=>{if(r.checked) answers[r.name]=r.value;});
+        document.querySelectorAll('textarea[name]').forEach(t=>{if(t.value.trim()) answers[t.name]=t.value.trim();});
+        localStorage.setItem(STORAGE_KEY,JSON.stringify({answers,time_left:timeLeft}));
+    }
+
+    function restoreAnswers(){
+        const raw=localStorage.getItem(STORAGE_KEY);
+        if(!raw) return;
+        const data=JSON.parse(raw);
+        if(!data) return;
+        Object.keys(data.answers||{}).forEach(name=>{
+            const val=data.answers[name];
+            const r=document.querySelector(`[name="${name}"][value="${val}"]`);
+            if(r){ r.checked=true; answeredSet.add(Array.from(cards).findIndex(c=>c.contains(r))); }
+            else { const t=document.querySelector(`textarea[name="${name}"]`); if(t){ t.value=val; answeredSet.add(Array.from(cards).findIndex(c=>c.contains(t))); } }
+        });
+        if(data.time_left) timeLeft=parseInt(data.time_left);
+    }
+
+    document.getElementById('prevBtn').addEventListener('click',()=>{ if(current>0) showQuestion(current-1); });
+    document.getElementById('nextBtn').addEventListener('click',()=>{ if(current<total-1) showQuestion(current+1); });
+    navBtns.forEach(b=>b.addEventListener('click',()=>{ showQuestion(parseInt(b.dataset.question)); }));
+
+    document.querySelectorAll('input[type="radio"]').forEach(r=>{
+        r.addEventListener('change',e=>{
+            answeredSet.add(parseInt(e.target.dataset.questionId));
+            saveAnswers(); updateNav();
+        });
+    });
+    document.querySelectorAll('textarea[data-question-id]').forEach(t=>{
+        t.addEventListener('input',e=>{
+            const idx=parseInt(t.dataset.questionId);
+            if(t.value.trim()) answeredSet.add(idx); else answeredSet.delete(idx);
+            saveAnswers(); updateNav();
+        });
+    });
+
+    const timerEl=document.getElementById('timer');
+    function renderTimer(){
+        const h=String(Math.floor(timeLeft/3600)).padStart(2,'0');
+        const m=String(Math.floor(timeLeft%3600/60)).padStart(2,'0');
+        const s=String(timeLeft%60).padStart(2,'0');
+        timerEl.textContent=`${h}:${m}:${s}`;
+    }
+    renderTimer();
+    setInterval(()=>{
+        timeLeft--;
+        if(timeLeft<=0) examForm.submit();
+        renderTimer();
+        saveAnswers();
+    },1000);
+
+    submitBtn.addEventListener('click',()=>{
+        localStorage.removeItem(STORAGE_KEY);
+        const loadingModal = new bootstrap.Modal(loadingModalEl, { backdrop:'static', keyboard:false });
+        loadingModal.show();
+        setTimeout(()=>examForm.submit(),300);
+    });
+
+    restoreAnswers();
+    showQuestion(0);
+});
+</script>
+
+{% endblock %}
+
+ 

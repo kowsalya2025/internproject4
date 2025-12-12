@@ -1,0 +1,267 @@
+<!-- templates/exams/reorder_questions.html -->
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .sortable-list {
+        list-style-type: none;
+        padding: 0;
+    }
+    .sortable-item {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: move;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+    }
+    .sortable-item:hover {
+        background-color: #f8f9fa;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .drag-handle {
+        color: #6c757d;
+        margin-right: 15px;
+        font-size: 1.2rem;
+    }
+    .question-number {
+        display: inline-block;
+        width: 35px;
+        height: 35px;
+        background: #0d6efd;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 35px;
+        font-weight: bold;
+        margin-right: 15px;
+    }
+    .sortable-item.sortable-ghost {
+        opacity: 0.4;
+    }
+    .sortable-item.sortable-chosen {
+        background-color: #e9ecef;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <!-- Header Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-sort-numeric-down"></i> Reorder Questions
+                    </h3>
+                    <a href="{% url 'add_question' exam.id %}" class="btn btn-light btn-sm">
+                        <i class="bi bi-arrow-left"></i> Back to Questions
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="bi bi-info-circle"></i> Instructions:</h5>
+                        <ul class="mb-0">
+                            <li>Drag and drop questions to reorder them</li>
+                            <li>The order will be saved automatically</li>
+                            <li>Click "Save Order" when you're done</li>
+                        </ul>
+                    </div>
+                    
+                    <p class="text-muted mb-4">
+                        Reordering questions for: <strong>{{ exam.title }}</strong>
+                        <br>Total questions: {{ questions.count }}
+                    </p>
+                    
+                    <!-- Question List -->
+                    <ul id="question-list" class="sortable-list">
+                        {% for question in questions %}
+                        <li class="sortable-item" data-id="{{ question.id }}">
+                            <div class="drag-handle">
+                                <i class="bi bi-grip-vertical"></i>
+                            </div>
+                            <div class="question-number">{{ forloop.counter }}</div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ question.question_text|truncatechars:100 }}</h6>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-info">{{ question.get_question_type_display }}</span>
+                                    <span class="badge bg-primary">{{ question.marks }} marks</span>
+                                    <span class="text-muted small">ID: {{ question.id }}</span>
+                                </div>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <div class="alert alert-warning text-center">
+                            <i class="bi bi-exclamation-triangle display-4"></i>
+                            <h4 class="mt-3">No questions found</h4>
+                            <p>Add some questions first before reordering.</p>
+                            <a href="{% url 'add_question' exam.id %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Add Questions
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </ul>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <div>
+                            <button id="reset-order" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset Order
+                            </button>
+                        </div>
+                        <div>
+                            <a href="{% url 'add_question' exam.id %}" class="btn btn-secondary me-2">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button id="save-order" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Save Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include Sortable.js -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const questionList = document.getElementById('question-list');
+    const saveButton = document.getElementById('save-order');
+    const resetButton = document.getElementById('reset-order');
+    
+    // Initialize Sortable
+    const sortable = Sortable.create(questionList, {
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        handle: '.drag-handle',
+        onUpdate: function() {
+            updateQuestionNumbers();
+        }
+    });
+    
+    // Update question numbers
+    function updateQuestionNumbers() {
+        const items = questionList.querySelectorAll('.sortable-item');
+        items.forEach((item, index) => {
+            const numberElement = item.querySelector('.question-number');
+            if (numberElement) {
+                numberElement.textContent = index + 1;
+            }
+        });
+    }
+    
+    // Save order
+    saveButton.addEventListener('click', async function() {
+        const items = questionList.querySelectorAll('.sortable-item');
+        const order = Array.from(items).map(item => item.getAttribute('data-id'));
+        
+        // Show loading
+        const originalText = saveButton.innerHTML;
+        saveButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        saveButton.disabled = true;
+        
+        try {
+            const response = await fetch("{% url 'reorder_questions' exam.id %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ order: order })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Show success message
+                showAlert('Order saved successfully!', 'success');
+                
+                // Update URL to prevent accidental page refresh
+                window.history.replaceState({}, document.title, window.location.href);
+            } else {
+                showAlert('Error: ' + (data.error || 'Failed to save order'), 'danger');
+            }
+        } catch (error) {
+            showAlert('Network error: ' + error.message, 'danger');
+        } finally {
+            // Restore button
+            saveButton.innerHTML = originalText;
+            saveButton.disabled = false;
+        }
+    });
+    
+    // Reset to original order
+    resetButton.addEventListener('click', function() {
+        if (confirm('Reset to original order?')) {
+            window.location.reload();
+        }
+    });
+    
+    // Alert function
+    function showAlert(message, type) {
+        // Remove existing alerts
+        const existingAlert = document.querySelector('.alert-floating');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+        
+        // Create new alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show alert-floating position-fixed`;
+        alertDiv.style.cssText = `
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        
+        alertDiv.innerHTML = `
+            <i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+    
+    // Warn before leaving if order changed
+    let orderChanged = false;
+    questionList.addEventListener('sortupdate', function() {
+        orderChanged = true;
+    });
+    
+    window.addEventListener('beforeunload', function(e) {
+        if (orderChanged) {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        }
+    });
+    
+    // Prevent form submission on Enter key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Missed Exam – View Only{% endblock %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h3 class="text-danger mb-3">Missed Exam: {{ exam.title }}</h3>
+
+    <div class="alert alert-warning">
+        ⚠ This exam is for viewing only. You cannot submit answers.
+    </div>
+
+    {% for question in questions %}
+        <div class="card mb-3">
+            <div class="card-body">
+
+                <h6>Q{{ forloop.counter }}. {{ question.question_text }}</h6>
+
+                {% if question.question_type == "mcq" %}
+                    {% for choice in question.choices.all %}
+                        <div class="form-check">
+                            <input type="radio" disabled class="form-check-input">
+                            <label class="form-check-label">
+                                {{ choice.choice_text }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mt-2">✏ This was a written answer question.</p>
+                {% endif %}
+
+            </div>
+        </div>
+    {% empty %}
+        <p>No questions available.</p>
+    {% endfor %}
+
+    <div class="text-center mt-4">
+        <a href="{% url 'student_dashboard' %}" class="btn btn-secondary">
+            ⬅ Back to Dashboard
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}
+
+

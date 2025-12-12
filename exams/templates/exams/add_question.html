@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add Questions - {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="bi bi-question-circle"></i> Add Questions to: {{ exam.title }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong><i class="bi bi-info-circle"></i> Current Status:</strong>
+                    Questions added: {{ questions.count }} | Total Exam Marks: {{ exam.total_marks }}
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    {{ question_form|crispy }}
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus"></i> Add Question
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if questions %}
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-list-ol"></i> Added Questions ({{ questions.count }})</h4>
+                </div>
+                <div class="card-body">
+                    {% for question in questions %}
+                        <div class="card mb-3 border-primary">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <strong>Question {{ forloop.counter }}</strong>  <!-- Changed from question.order -->
+                                    <div>
+                                        <span class="badge bg-info">{{ question.get_question_type_display }}</span>
+                                        <span class="badge bg-primary">{{ question.marks }} marks</span>
+                                        {% if question.question_type != 'short' %}
+                                            <a href="{% url 'edit_question' question.id %}" class="btn btn-sm btn-warning">
+                                                <i class="bi bi-pencil"></i> Edit Choices
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-2">{{ question.question_text }}</p>
+                                {% if question.choices.exists %}
+                                    <ul class="list-group list-group-flush">
+                                        {% for choice in question.choices.all %}
+                                            <li class="list-group-item {% if choice.is_correct %}list-group-item-success{% endif %}">
+                                                {{ choice.choice_text }}
+                                                {% if choice.is_correct %}
+                                                    <i class="bi bi-check-circle text-success float-end"></i>
+                                                {% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- In add_question.html, add this near the finish button -->
+<div class="d-flex justify-content-between mt-4">
+    {% if questions.count > 1 %}
+    <a href="{% url 'reorder_questions' exam.id %}" class="btn btn-info">
+        <i class="bi bi-sort-numeric-down"></i> Reorder Questions
+    </a>
+    {% endif %}
+    
+    <a href="{% url 'teacher_dashboard' %}" class="btn btn-success btn-lg">
+        <i class="bi bi-check-circle"></i> Finish & Go to Dashboard
+    </a>
+</div>
+
+            <!-- <div class="mt-4">
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-success btn-lg">
+                    <i class="bi bi-check-circle"></i> Finish & Go to Dashboard
+                </a>
+            </div> -->
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

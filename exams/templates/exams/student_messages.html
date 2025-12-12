@@ -1,0 +1,35 @@
+<h2>Your Messages</h2>
+
+{% if messages_sent %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Teacher</th>
+                <th>Subject</th>
+                <th>Message</th>
+                <th>Sent At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for msg in messages_sent %}
+            <tr>
+                <td>{{ msg.teacher.get_full_name|default:msg.teacher.username }}</td>
+                <td>{{ msg.subject }}</td>
+                <td>{{ msg.message }}</td>
+                <td>{{ msg.created_at|date:"M d, Y H:i" }}</td>
+            </tr>
+
+            <!-- Show teacher replies -->
+            {% for reply in msg.teacher_replies.all %}
+            <tr>
+                <td colspan="2" class="text-end"><strong>Reply from {{ reply.teacher.get_full_name|default:reply.teacher.username }}:</strong></td>
+                <td colspan="2">{{ reply.message_text }}</td>
+            </tr>
+            {% endfor %}
+
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>You have not sent any messages to teachers yet.</p>
+{% endif %}

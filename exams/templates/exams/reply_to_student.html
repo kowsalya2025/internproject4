@@ -1,0 +1,10 @@
+<!-- exams/templates/exams/reply_to_student.html -->
+<h3>Reply to {{ msg.sender.get_full_name|default:msg.sender.username }}</h3>
+<p><strong>Subject:</strong> {{ msg.subject }}</p>
+<p><strong>Message:</strong> {{ msg.message }}</p>
+
+<form method="POST">
+    {% csrf_token %}
+    <textarea name="reply" rows="4" class="form-control" placeholder="Type your reply here..." required></textarea>
+    <button type="submit" class="btn btn-primary mt-2">Send Reply</button>
+</form>

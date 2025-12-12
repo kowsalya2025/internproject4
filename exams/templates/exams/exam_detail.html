@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Exam Detail - {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">{{ exam.title }}</h3>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <p><strong>Subject:</strong> {{ exam.subject.name }}</p>
+                    <p><strong>Total Marks:</strong> {{ exam.total_marks }}</p>
+                    <p><strong>Duration:</strong> {{ exam.duration }} minutes</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Date & Time:</strong> {{ exam.start_time|date:"d M Y H:i" }} - {{ exam.end_time|date:"d M Y H:i" }}</p>
+                    {% load tz %}  {# make sure timezone-aware dates work #}
+
+<p><strong>Status:</strong>
+    {% now "UTC" as now %}
+    {% if exam.start_time > now %}
+        <span class="badge bg-info">Upcoming</span>
+    {% elif exam.end_time < now %}
+        <span class="badge bg-secondary">Finished</span>
+    {% else %}
+        <span class="badge bg-success">Live</span>
+    {% endif %}
+</p>
+
+                   
+                    <!-- <p><strong>Status:</strong> 
+                        {% if exam.is_published %}
+                        <span class="badge bg-success">Published</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Draft</span>
+                        {% endif %}
+                    </p> -->
+                </div>
+            </div>
+
+            <hr>
+
+            <h5 class="fw-bold">Description</h5>
+            <p>{{ exam.description|default:"No description provided." }}</p>
+
+            <hr>
+
+            <h5 class="fw-bold">Questions</h5>
+            {% if questions %}
+                <ul class="list-group mb-3">
+                    {% for q in questions %}
+                    <li class="list-group-item">
+                        <strong>Q{{ forloop.counter }}:</strong> {{ q.question_text }}
+                        <br>
+                        <span class="text-muted">Marks: {{ q.marks }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No questions added yet.</p>
+            {% endif %}
+
+            <div class="d-flex justify-content-between mt-4">
+                {% if user.is_teacher %}
+                <a href="{% url 'edit_exam' exam.id %}" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> Edit Exam
+                </a>
+                <a href="{% url 'add_question' exam.id %}" class="btn btn-secondary">
+                    <i class="bi bi-plus-circle"></i> Add Question
+                </a>
+                {% endif %}
+
+                {% if user.is_student and exam.is_published %}
+                <a href="{% url 'take_exam' exam.id %}" class="btn btn-success">
+                    <i class="bi bi-play-circle"></i> Start Exam
+                </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+

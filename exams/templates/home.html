@@ -1,0 +1,656 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Cloud DevOps Performance Analytics{% endblock %}
+
+{% block content %}
+<style>
+    /* Additional Home Page Styles */
+    .welcome-section {
+        margin-top: -50px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .main-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+    }
+
+    .subtitle {
+        font-size: 1.3rem;
+        color: #6c757d;
+        font-weight: 400;
+        margin-bottom: 3rem;
+        line-height: 1.6;
+    }
+
+    /* Role Cards */
+    .role-card {
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        border-radius: 35px;
+        padding: 3rem 2rem;
+        text-align: center;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 2px solid transparent;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .role-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: var(--primary-gradient);
+        transform: scaleX(0);
+        transition: transform 0.5s;
+    }
+
+    .role-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .role-card:hover {
+        transform: translateY(-20px) scale(1.02);
+        box-shadow: 0 40px 80px rgba(0,0,0,0.15);
+        border-color: rgba(102,126,234,0.3);
+    }
+
+    .role-icon {
+        width: 120px;
+        height: 120px;
+        background: var(--primary-gradient);
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        font-size: 3.5rem;
+        color: white;
+        box-shadow: 0 15px 40px rgba(102,126,234,0.4);
+        transition: all 0.5s;
+    }
+
+    .role-card:hover .role-icon {
+        transform: rotateY(360deg) scale(1.1);
+        box-shadow: 0 20px 50px rgba(102,126,234,0.6);
+    }
+
+    .role-card.teacher-card .role-icon {
+        background: var(--success-gradient);
+    }
+
+    .role-card.teacher-card:hover .role-icon {
+        box-shadow: 0 20px 50px rgba(0,242,254,0.6);
+    }
+
+    .role-card h3 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .role-card p {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .role-btn {
+        padding: 1rem 2.5rem;
+        border-radius: 100px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        border: none;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    .role-btn:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    }
+
+    .student-btn {
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    .teacher-btn {
+        background: var(--success-gradient);
+        color: white;
+    }
+
+    /* Login CTA */
+    .login-cta {
+        background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+        border-radius: 30px;
+        padding: 2rem;
+        margin-top: 3rem;
+        border: 2px solid rgba(102,126,234,0.2);
+    }
+
+    .login-cta-btn {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1rem 3rem;
+        border-radius: 100px;
+        border: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.4s;
+        box-shadow: 0 10px 30px rgba(102,126,234,0.3);
+    }
+
+    .login-cta-btn:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 20px 50px rgba(102,126,234,0.5);
+    }
+
+    /* Features Section */
+    .features-section {
+        margin-top: 6rem;
+    }
+
+    .section-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 3rem;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 1rem;
+        background: var(--dark-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .section-subtitle {
+        text-align: center;
+        font-size: 1.2rem;
+        color: #6c757d;
+        margin-bottom: 4rem;
+    }
+
+    .feature-card {
+        background: white;
+        border-radius: 30px;
+        padding: 2.5rem;
+        height: 100%;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s;
+    }
+
+    .feature-card:hover::before {
+        left: 100%;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+        border-color: rgba(102,126,234,0.3);
+    }
+
+    .feature-icon {
+        width: 90px;
+        height: 90px;
+        border-radius: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2.5rem;
+        color: white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        transition: all 0.4s;
+    }
+
+    .feature-card:hover .feature-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .feature-card:nth-child(1) .feature-icon {
+        background: var(--primary-gradient);
+    }
+
+    .feature-card:nth-child(2) .feature-icon {
+        background: var(--info-gradient);
+    }
+
+    .feature-card:nth-child(3) .feature-icon {
+        background: var(--success-gradient);
+    }
+
+    .feature-card:nth-child(4) .feature-icon {
+        background: var(--secondary-gradient);
+    }
+
+    .feature-card:nth-child(5) .feature-icon {
+        background: var(--warning-gradient);
+    }
+
+    .feature-card:nth-child(6) .feature-icon {
+        background: var(--dark-gradient);
+    }
+
+    .feature-card h5 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: #2d3748;
+    }
+
+    .feature-card p {
+        color: #6c757d;
+        font-size: 1.05rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Testimonial Section */
+    .testimonial-section {
+        margin-top: 6rem;
+        background: linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%);
+        border-radius: 40px;
+        padding: 4rem 2rem;
+    }
+
+    .testimonial-card {
+        background: white;
+        border-radius: 25px;
+        padding: 2.5rem;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+        height: 100%;
+        transition: all 0.4s;
+    }
+
+    .testimonial-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 25px 60px rgba(0,0,0,0.12);
+    }
+
+    .quote-icon {
+        font-size: 3rem;
+        color: var(--primary);
+        opacity: 0.2;
+        margin-bottom: 1rem;
+    }
+
+    .testimonial-text {
+        font-size: 1.1rem;
+        color: #4a5568;
+        line-height: 1.8;
+        margin-bottom: 1.5rem;
+        font-style: italic;
+    }
+
+    .testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .author-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .author-info h6 {
+        margin: 0;
+        font-weight: 700;
+        color: #2d3748;
+    }
+
+    .author-info p {
+        margin: 0;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        margin-top: 6rem;
+        background: var(--primary-gradient);
+        border-radius: 40px;
+        padding: 4rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .cta-section h2 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 3rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .cta-section p {
+        font-size: 1.3rem;
+        color: rgba(255,255,255,0.95);
+        margin-bottom: 2.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .cta-btn-group {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
+    }
+
+    .cta-btn {
+        padding: 1.2rem 3rem;
+        border-radius: 100px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        border: none;
+        transition: all 0.4s;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+
+    .cta-btn-primary {
+        background: white;
+        color: #667eea;
+    }
+
+    .cta-btn-primary:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+    }
+
+    .cta-btn-secondary {
+        background: transparent;
+        color: white;
+        border: 3px solid white;
+    }
+
+    .cta-btn-secondary:hover {
+        background: white;
+        color: #667eea;
+        transform: translateY(-5px) scale(1.05);
+    }
+</style>
+
+<div class="welcome-section" data-aos="fade-up">
+    <div class="row">
+        <div class="col-md-10 mx-auto text-center">
+            <h1 class="main-title">
+                <i class="bi bi-cloud-lightning-rain-fill"></i><br>
+                Student Performance Analytics & Online Exam System
+            </h1>
+            <p class="subtitle">
+                A comprehensive cloud-based platform for conducting online examinations,
+                analyzing student performance with advanced AI insights, and tracking learning progress in real-time
+            </p>
+
+            {% if not user.is_authenticated %}
+                <!-- Role Selection Cards -->
+                <div class="row g-4 mt-4">
+                    <div class="col-lg-6" data-aos="fade-right" data-aos-delay="100">
+                        <div class="role-card">
+                            <div class="role-icon">
+                                <i class="bi bi-person-check-fill"></i>
+                            </div>
+                            <h3>For Students</h3>
+                            <p>
+                                Take online exams with intelligent proctoring, get instant results,
+                                track your performance metrics, and access personalized learning insights
+                            </p>
+                            <a href="{% url 'register' %}" class="btn role-btn student-btn">
+                                <i class="bi bi-rocket-takeoff me-2"></i>Register as Student
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6" data-aos="fade-left" data-aos-delay="200">
+                        <div class="role-card teacher-card">
+                            <div class="role-icon">
+                                <i class="bi bi-clipboard-data-fill"></i>
+                            </div>
+                            <h3>For Teachers</h3>
+                            <p>
+                                Create comprehensive exams, manage question banks, analyze student performance
+                                with advanced analytics, and generate detailed performance reports
+                            </p>
+                            <a href="{% url 'register' %}" class="btn role-btn teacher-btn">
+                                <i class="bi bi-mortarboard-fill me-2"></i>Register as Teacher
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Login CTA -->
+                <div class="login-cta" data-aos="fade-up" data-aos-delay="300">
+                    <h4 class="fw-bold mb-3">Already have an account?</h4>
+                    <a href="{% url 'login' %}" class="btn login-cta-btn">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login to Your Dashboard
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Key Features Section -->
+<div class="features-section">
+    <h2 class="section-title" data-aos="fade-up">Powerful Features</h2>
+    <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        Everything you need for modern online examination and performance tracking
+    </p>
+    
+    <div class="row g-4">
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-pencil-square"></i>
+                </div>
+                <h5>Smart Exam Creation</h5>
+                <p>
+                    Create exams with multiple choice questions, set time limits,
+                    randomize questions, and manage question banks efficiently
+                </p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <h5>Timed Assessments</h5>
+                <p>
+                    Set duration and schedule for exams with automatic submission,
+                    countdown timers, and time-based analytics
+                </p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <h5>Advanced Analytics</h5>
+                <p>
+                    Comprehensive performance analytics with visual charts,
+                    trend analysis, and AI-powered insights for improvement
+                </p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <h5>Secure Environment</h5>
+                <p>
+                    Military-grade security with encryption, anti-cheating measures,
+                    and secure authentication for exam integrity
+                </p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                </div>
+                <h5>Real-time Results</h5>
+                <p>
+                    Instant grading and results delivery with detailed scorecards,
+                    answer reviews, and performance breakdowns
+                </p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-diagram-3-fill"></i>
+                </div>
+                <h5>Cloud Integration</h5>
+                <p>
+                    Built on cloud infrastructure for scalability, reliability,
+                    and seamless access from anywhere, anytime
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Testimonials Section -->
+<div class="testimonial-section" data-aos="fade-up">
+    <h2 class="section-title mb-4">What Our Users Say</h2>
+    <div class="row g-4 mt-4">
+        <div class="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay="100">
+            <div class="testimonial-card">
+                <div class="quote-icon">
+                    <i class="bi bi-quote"></i>
+                </div>
+                <p class="testimonial-text">
+                    "This platform has transformed how we conduct exams. The analytics
+                    help us understand student performance like never before!"
+                </p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">DR</div>
+                    <div class="author-info">
+                        <h6>Dr. Rajesh Kumar</h6>
+                        <p>Professor, Computer Science</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay="200">
+            <div class="testimonial-card">
+                <div class="quote-icon">
+                    <i class="bi bi-quote"></i>
+                </div>
+                <p class="testimonial-text">
+                    "As a student, I love the instant feedback and detailed performance
+                    reports. It helps me identify areas for improvement quickly."
+                </p>
+                <div class="testimonial-author">
+                    <div class="author-avatar" style="background: var(--success-gradient);">PS</div>
+                    <div class="author-info">
+                        <h6>Priya Sharma</h6>
+                        <p>Engineering Student</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay="300">
+            <div class="testimonial-card">
+                <div class="quote-icon">
+                    <i class="bi bi-quote"></i>
+                </div>
+                <p class="testimonial-text">
+                    "The ease of creating and managing exams is incredible. The platform
+                    saves us hours of work while providing better insights."
+                </p>
+                <div class="testimonial-author">
+                    <div class="author-avatar" style="background: var(--secondary-gradient);">AM</div>
+                    <div class="author-info">
+                        <h6>Arun Mehta</h6>
+                        <p>Department Head</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+{% if not user.is_authenticated %}
+<div class="cta-section" data-aos="fade-up">
+    <h2>Ready to Transform Your Examination Process?</h2>
+    <p>Join thousands of educators and students using our platform</p>
+    <div class="cta-btn-group">
+        <a href="{% url 'register' %}" class="btn cta-btn cta-btn-primary">
+            <i class="bi bi-rocket-takeoff me-2"></i>Get Started Free
+        </a>
+        <a href="{% url 'login' %}" class="btn cta-btn cta-btn-secondary">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+        </a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script>
+    // Initialize AOS animations
+    AOS.init({
+        duration: 800,
+        easing: 'ease-in-out',
+        once: true,
+        offset: 100
+    });
+</script>
+{% endblock %}

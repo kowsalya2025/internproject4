@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% block title %}Create Exam{% endblock %}
+{% block content %}
+
+<style>
+/* ✅ Background */
+.exam-bg {
+    background: linear-gradient(to right, #667eea, #764ba2);
+    min-height: 100vh;
+    padding: 40px 0;
+}
+
+/* ✅ Glass Card */
+.glass-card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    animation: fadeIn 1s ease-in-out;
+}
+
+/* ✅ Header */
+.exam-header {
+    background: linear-gradient(to right, #4facfe, #00f2fe);
+    color: white;
+    padding: 20px;
+    border-radius: 16px 16px 0 0;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* ✅ Inputs */
+.form-control, .form-select {
+    border-radius: 10px;
+    padding: 10px;
+    transition: 0.3s;
+}
+.form-control:focus {
+    border-color: #4facfe;
+    box-shadow: 0 0 8px rgba(79,172,254,0.6);
+}
+
+/* ✅ Button */
+.create-btn {
+    border-radius: 30px;
+    font-size: 18px;
+    transition: 0.3s;
+}
+.create-btn:hover {
+    transform: scale(1.05);
+}
+
+/* ✅ Animation */
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(40px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+</style>
+
+<div class="exam-bg">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <div class="card glass-card">
+                <div class="exam-header">
+                    <h3><i class="fas fa-pen"></i> Create New Exam</h3>
+                    <p class="mb-0">Design your test with ease</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Exam Title *</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description *</label>
+                            <textarea class="form-control" name="description" rows="3" required></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Subject *</label>
+                                <select name="subject" class="form-control" required>
+                                    <option value="" disabled selected>Select Subject</option>
+                                    {% for subject in subjects %}
+                                    <option value="{{ subject.id }}">{{ subject.code }} - {{ subject.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Difficulty *</label>
+                                <select class="form-control" name="difficulty" required>
+                                    <option value="easy">Easy</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Duration (minutes) *</label>
+                                <input type="number" class="form-control" id="duration" name="duration" min="1" required>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Total Marks *</label>
+                                <input type="number" class="form-control" name="total_marks" min="1" required>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Passing Marks *</label>
+                                <input type="number" class="form-control" name="passing_marks" min="1" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Start Time *</label>
+                                <input type="datetime-local" class="form-control" id="start_time" name="start_time" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">End Time *</label>
+                                <input type="datetime-local" class="form-control" id="end_time" name="end_time" readonly>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3 create-btn">
+                            <i class="fas fa-save"></i> Create Exam & Add Questions
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- ✅ AUTO END TIME CALCULATION -->
+<script>
+/* Robust local-datetime parser/formatter to avoid timezone shifts */
+function parseLocalDatetime(val) {
+  if (!val) return null;                 // e.g. ""
+  const parts = val.split('T');
+  if (parts.length < 2) return null;
+  const [datePart, timePart] = parts;
+  const [y, m, d] = datePart.split('-').map(Number);
+  const [hh, mm] = timePart.split(':').map(Number);
+  return new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0);
+}
+
+function formatLocalDatetime(dt) {
+  if (!dt) return '';
+  const pad = n => n.toString().padStart(2, '0');
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+}
+
+function calculateEndTime() {
+  const startVal = document.getElementById("start_time").value;
+  const durationVal = document.getElementById("duration").value;
+
+  // if either empty, clear end_time
+  if (!startVal || !durationVal) {
+    document.getElementById("end_time").value = '';
+    return;
+  }
+
+  // parse as local datetime to avoid timezone conversion issues
+  const startDt = parseLocalDatetime(startVal);
+  if (!startDt) {
+    document.getElementById("end_time").value = '';
+    return;
+  }
+
+  // ensure duration is integer minutes (positive)
+  const minutesToAdd = parseInt(durationVal, 10);
+  if (Number.isNaN(minutesToAdd)) {
+    document.getElementById("end_time").value = '';
+    return;
+  }
+
+  const endDt = new Date(startDt.getTime());
+  endDt.setMinutes(endDt.getMinutes() + minutesToAdd);
+
+  document.getElementById("end_time").value = formatLocalDatetime(endDt);
+}
+
+/* Listen for changes on both fields (use input + change for broader coverage) */
+const durationEl = document.getElementById("duration");
+const startEl = document.getElementById("start_time");
+
+if (durationEl && startEl) {
+  ['input','change'].forEach(evt => {
+    durationEl.addEventListener(evt, calculateEndTime);
+    startEl.addEventListener(evt, calculateEndTime);
+  });
+}
+
+/* Optional: calculate once on page load if values exist */
+window.addEventListener('DOMContentLoaded', calculateEndTime);
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,579 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Cloud DevOps{% endblock %}
+
+{% block content %}
+<style>
+    /* Profile Page Styles */
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .profile-header {
+        background: var(--primary-gradient);
+        border-radius: 35px;
+        padding: 3rem;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 25px 60px rgba(102,126,234,0.3);
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.07'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.4;
+    }
+
+    .profile-header-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(20px);
+        border: 5px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: white;
+        font-weight: 800;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        flex-shrink: 0;
+    }
+
+    .profile-info {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .profile-name {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 3rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+
+    .profile-username {
+        font-size: 1.3rem;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-role {
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(20px);
+        border: 2px solid rgba(255,255,255,0.3);
+        padding: 0.75rem 1.5rem;
+        border-radius: 100px;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Profile Content Grid */
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .profile-card {
+        background: white;
+        border-radius: 30px;
+        padding: 2.5rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 2px solid rgba(0,0,0,0.03);
+    }
+
+    .profile-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 80px rgba(0,0,0,0.15);
+        border-color: rgba(102,126,234,0.3);
+    }
+
+    .card-title-modern {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #2d3748;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .card-title-modern i {
+        font-size: 2rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .info-row {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 20px;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+
+    .info-row:hover {
+        transform: translateX(10px);
+        border-color: rgba(102,126,234,0.3);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .info-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--primary-gradient);
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.8rem;
+        flex-shrink: 0;
+        margin-right: 1.5rem;
+        box-shadow: 0 10px 25px rgba(102,126,234,0.3);
+    }
+
+    .info-icon.success {
+        background: var(--success-gradient);
+    }
+
+    .info-icon.info {
+        background: var(--info-gradient);
+    }
+
+    .info-icon.warning {
+        background: var(--warning-gradient);
+    }
+
+    .info-content {
+        flex: 1;
+    }
+
+    .info-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-size: 1.3rem;
+        color: #2d3748;
+        font-weight: 700;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 3rem;
+    }
+
+    .action-btn-card {
+        background: white;
+        border: 3px solid rgba(102,126,234,0.2);
+        border-radius: 25px;
+        padding: 2rem;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+    }
+
+    .action-btn-card:hover {
+        transform: translateY(-10px) scale(1.03);
+        background: var(--primary-gradient);
+        border-color: transparent;
+        box-shadow: 0 25px 60px rgba(102,126,234,0.4);
+    }
+
+    .action-btn-card:hover .action-icon-modern {
+        transform: scale(1.1) rotate(10deg);
+        color: white;
+    }
+
+    .action-btn-card:hover .action-text {
+        color: white;
+    }
+
+    .action-icon-modern {
+        font-size: 3rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+        transition: all 0.4s;
+    }
+
+    .action-text {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2d3748;
+        transition: all 0.3s;
+    }
+
+    /* Stats Card */
+    .stats-card {
+        background: var(--info-gradient);
+        border-radius: 30px;
+        padding: 2.5rem;
+        color: white;
+        box-shadow: 0 25px 60px rgba(67,233,123,0.3);
+        grid-column: 1 / -1;
+    }
+
+    .stats-card h3 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .stat-item {
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(20px);
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 20px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .stat-item:hover {
+        transform: scale(1.05);
+        background: rgba(255,255,255,0.3);
+    }
+
+    .stat-number {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 1rem;
+        opacity: 0.95;
+        font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-name {
+            font-size: 2rem;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            font-size: 2.5rem;
+        }
+
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header" data-aos="fade-down">
+        <div class="profile-header-content">
+            <div class="profile-avatar">
+                {{ request.user.first_name|first|default:request.user.username|first|upper }}{{ request.user.last_name|first|upper|default:"" }}
+            </div>
+            <div class="profile-info">
+                <h1 class="profile-name">
+                    {% if request.user.get_full_name %}
+                        {{ request.user.get_full_name }}
+                    {% else %}
+                        {{ request.user.username }}
+                    {% endif %}
+                </h1>
+                <p class="profile-username">
+                    <i class="bi bi-at me-2"></i>{{ request.user.username }}
+                </p>
+                <span class="profile-role">
+                    <i class="bi bi-person-badge me-2"></i>
+                    {% if request.user.profile.user_type == 'teacher' %}
+                        Teacher
+                    {% else %}
+                        Student
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Details Grid -->
+    <div class="profile-grid">
+        <!-- Personal Information -->
+        <div class="profile-card" data-aos="fade-right">
+            <h3 class="card-title-modern">
+                <i class="bi bi-person-circle"></i>
+                Personal Information
+            </h3>
+            
+            <div class="info-row">
+                <div class="info-icon">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <div class="info-content">
+                    <div class="info-label">Full Name</div>
+                    <div class="info-value">
+                        {% if request.user.get_full_name %}
+                            {{ request.user.get_full_name }}
+                        {% else %}
+                            {{ request.user.username }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-icon success">
+                    <i class="bi bi-at"></i>
+                </div>
+                <div class="info-content">
+                    <div class="info-label">Username</div>
+                    <div class="info-value">{{ request.user.username }}</div>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-icon info">
+                    <i class="bi bi-envelope-fill"></i>
+                </div>
+                <div class="info-content">
+                    <div class="info-label">Email Address</div>
+                    <div class="info-value">{{ request.user.email|default:"Not provided" }}</div>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-icon warning">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <div class="info-content">
+                    <div class="info-label">Account Type</div>
+                    <div class="info-value">
+                        {% if request.user.profile.user_type == 'teacher' %}
+                            Teacher Account
+                        {% else %}
+                            Student Account
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Details -->
+        <div class="profile-card" data-aos="fade-left">
+            <h3 class="card-title-modern">
+                <i class="bi bi-gear-fill"></i>
+                Account Details
+            </h3>
+
+            <div class="info-row">
+                <div class="info-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="info-content">
+                    <div class="info-label">Member Since</div>
+                    <div class="info-value">{{ request.user.date_joined|date:"F d, Y" }}</div>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-icon success">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="info-content">
+                    <div class="info-label">Last Login</div>
+                    <div class="info-value">
+                        {% if request.user.last_login %}
+                            {{ request.user.last_login|date:"M d, Y H:i" }}
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-icon info">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="info-content">
+                    <div class="info-label">Account Status</div>
+                    <div class="info-value">
+                        {% if request.user.is_active %}
+                            <span style="color: #43e97b;">Active</span>
+                        {% else %}
+                            <span style="color: #f5576c;">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-icon warning">
+                    <i class="bi bi-key-fill"></i>
+                </div>
+                <div class="info-content">
+                    <div class="info-label">User ID</div>
+                    <div class="info-value">#{{ request.user.id }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Card (Full Width) -->
+        <div class="stats-card" data-aos="fade-up">
+            <h3>
+                <i class="bi bi-graph-up-arrow"></i>
+                Your Statistics
+            </h3>
+            <div class="stats-grid">
+                {% if request.user.profile.user_type == 'teacher' %}
+                    <div class="stat-item">
+                        <div class="stat-number">
+                            <i class="bi bi-book-fill"></i> {{ request.user.subjects.count|default:0 }}
+                        </div>
+                        <div class="stat-label">Subjects Created</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">
+                            <i class="bi bi-file-earmark-text"></i> {{ request.user.exams.count|default:0 }}
+                        </div>
+                        <div class="stat-label">Exams Created</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">
+                            <i class="bi bi-question-circle"></i> 0
+                        </div>
+                        <div class="stat-label">Total Questions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">
+                            <i class="bi bi-people-fill"></i> 0
+                        </div>
+                        <div class="stat-label">Students Reached</div>
+                    </div>
+                {% else %}
+                    <div class="stat-item">
+                        <div class="stat-number">
+                            <i class="bi bi-clipboard-check"></i> 0
+                        </div>
+                        <div class="stat-label">Exams Taken</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">
+                            <i class="bi bi-trophy-fill"></i> 0%
+                        </div>
+                        <div class="stat-label">Average Score</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">
+                            <i class="bi bi-star-fill"></i> 0
+                        </div>
+                        <div class="stat-label">Best Score</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">
+                            <i class="bi bi-clock-fill"></i> 0h
+                        </div>
+                        <div class="stat-label">Time Spent</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons" data-aos="fade-up" data-aos-delay="200">
+        <a href="{% url 'password_change' %}" class="action-btn-card">
+            <i class="bi bi-key-fill action-icon-modern"></i>
+            <div class="action-text">Change Password</div>
+        </a>
+        <a href="{% url 'edit_profile' %}" class="action-btn-card">
+    <i class="bi bi-pencil-square action-icon-modern"></i>
+    <div class="action-text">Edit Profile</div>
+</a>
+
+        {% if request.user.profile.user_type == 'teacher' %}
+            <a href="{% url 'teacher_dashboard' %}" class="action-btn-card">
+                <i class="bi bi-speedometer2 action-icon-modern"></i>
+                <div class="action-text">Dashboard</div>
+            </a>
+        {% else %}
+            <a href="{% url 'student_dashboard' %}" class="action-btn-card">
+                <i class="bi bi-speedometer2 action-icon-modern"></i>
+                <div class="action-text">Dashboard</div>
+            </a>
+        {% endif %}
+
+    
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script>
+    // Initialize AOS
+    AOS.init({
+        duration: 800,
+        easing: 'ease-in-out',
+        once: true,
+        offset: 100
+    });
+</script>
+{% endblock %}

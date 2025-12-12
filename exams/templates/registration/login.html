@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login - ExamPro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(-45deg, #4361ee, #3a0ca3, #7209b7, #560bad);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.login-page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-card {
+    background: white;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 420px;
+    padding: 35px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+    animation: floatCard 6s ease-in-out infinite;
+}
+
+@keyframes floatCard {
+    50% { transform: translateY(-10px); }
+}
+
+.login-brand {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.login-brand h2 {
+    margin: 10px 0 5px;
+    color: #4361ee;
+}
+
+/* USER TYPE */
+.user-type-selector {
+    display: flex;
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 20px;
+}
+
+.user-type-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.user-type-btn.active {
+    background: white;
+    border-radius: 8px;
+    color: #4361ee;
+}
+
+/* FORM */
+.login-form-group {
+    margin-bottom: 18px;
+    position: relative;
+}
+
+.login-form-control {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    font-size: 15px;
+}
+
+.login-form-label {
+    font-size: 13px;
+    color: #64748b;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 45px;
+    cursor: pointer;
+}
+
+.login-options {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 18px;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #4cc9f0, #4361ee);
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.btn-login.teacher-mode {
+    background: linear-gradient(135deg, #f72585, #b5179e);
+}
+.btn-login.admin-mode {
+    background: linear-gradient(135deg, #2a9d8f, #264653);
+}
+
+/* SHAKE */
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}
+
+.login-card.shake {
+    animation: shake 0.4s;
+}
+
+/* AUTO GLOW */
+.auto-focus {
+    box-shadow: 0 0 15px rgba(67,97,238,0.4);
+}
+
+/* LOADER */
+.login-loader {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 9999;
+}
+</style>
+</head>
+<body>
+
+<div class="login-page-wrapper">
+
+<div class="login-card">
+
+<div class="login-brand">
+    <i class="bi bi-mortarboard-fill fs-1"></i>
+    <h2>ExamPro</h2>
+    <p>Sign in to continue</p>
+</div>
+
+<!-- USER TYPE -->
+<div class="user-type-selector">
+    <button type="button" class="user-type-btn active" data-type="student">Student</button>
+    <button type="button" class="user-type-btn" data-type="teacher">Teacher</button>
+    <button type="button" class="user-type-btn" data-type="admin">Admin</button>
+</div>
+
+<form method="post" id="loginForm">
+    {% csrf_token %}
+    <input type="hidden" name="user_type" id="userTypeInput" value="student">
+
+    <div class="login-form-group">
+        <label class="login-form-label">Username</label>
+        <input type="text" name="username" id="id_username" class="login-form-control" required>
+    </div>
+
+    <div class="login-form-group">
+        <label class="login-form-label">Password</label>
+        <input type="password" name="password" id="id_password" class="login-form-control" required>
+        <span class="password-toggle" id="togglePassword"><i class="bi bi-eye"></i></span>
+    </div>
+
+    <div class="login-options">
+        <label><input type="checkbox"> Remember me</label>
+        <a href="{% url 'password_reset' %}">Forgot?</a>
+    </div>
+
+    {% if form.errors %}
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelector(".login-card").classList.add("shake");
+        });
+    </script>
+    {% endif %}
+
+    <button type="submit" class="btn-login" id="submitBtn">Sign In</button>
+</form>
+
+</div>
+</div>
+
+<!-- FULL PAGE LOADER -->
+<div class="login-loader" id="loginLoader">
+    <div class="spinner-border"></div>
+    <p>Logging in...</p>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const usernameInput = document.getElementById("id_username");
+    const passwordInput = document.getElementById("id_password");
+    const togglePassword = document.getElementById("togglePassword");
+    const userTypeBtns = document.querySelectorAll(".user-type-btn");
+    const userTypeInput = document.getElementById("userTypeInput");
+    const submitBtn = document.getElementById("submitBtn");
+
+    // Autofocus glow
+    setTimeout(() => {
+        usernameInput.focus();
+        usernameInput.classList.add("auto-focus");
+    }, 400);
+
+    // Show/hide password
+    togglePassword.addEventListener("click", () => {
+        const type = passwordInput.type === "password" ? "text" : "password";
+        passwordInput.type = type;
+    });
+
+    // User Type Switch
+    userTypeBtns.forEach(btn => {
+        btn.addEventListener("click", function() {
+            userTypeBtns.forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+
+            const type = this.dataset.type;
+            userTypeInput.value = type;
+
+            submitBtn.className = "btn-login";
+            if (type === "teacher") submitBtn.classList.add("teacher-mode");
+            if (type === "admin") submitBtn.classList.add("admin-mode");
+        });
+    });
+
+    // Loader on submit
+    document.getElementById("loginForm").addEventListener("submit", function() {
+        document.getElementById("loginLoader").style.display = "flex";
+    });
+});
+</script>
+
+</body>
+</html>
+
+
+
+
