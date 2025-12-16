@@ -18,3 +18,7 @@ services:
     autoDeploy: true
     healthCheckPath: /
     disk: 512
+
+
+
+    # http://localhost:8000
