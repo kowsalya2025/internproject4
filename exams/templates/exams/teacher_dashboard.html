@@ -783,15 +783,59 @@
     </div>
 </div>
 
-<!-- Student Messages Section -->
-<div class="section-card" data-aos="fade-up" data-aos-delay="400">
+
+<!-- student performance section -->
+<div class="section-body">
+    {% if exam_performance %}
+
+    <div class="table-responsive">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Exam</th>
+                    <th>Attempts</th>
+                    <th>Average Score</th>
+                    <th>Highest</th>
+                    <th>Lowest</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in exam_performance %}
+                <tr>
+                    <td class="exam-title">{{ p.exam__title }}</td>
+                    <td>{{ p.total_attempts }}</td>
+                    <td><strong style="color:#198754;">{{ p.avg_score|floatformat:2 }}</strong></td>
+                    <td style="color:#0d6efd;">{{ p.max_score }}</td>
+                    <td style="color:#dc3545;">{{ p.min_score }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ✅ CHART GOES HERE -->
+    <div style="margin-top:40px;">
+        <h4 class="mb-3">Average Score per Exam</h4>
+        <canvas id="examChart" height="120"></canvas>
+    </div>
+
+    {% else %}
+        <div class="empty-state">
+            <h3 class="empty-title">No Performance Data</h3>
+            <p class="empty-text">No students have attempted exams yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+
+<!-- inside teacher_dashboard.html -->
+<div class="section-card" data-aos="fade-up" data-aos-delay="400"> 
     <div class="section-header">
         <h2 class="section-title">
-            <i class="bi bi-envelope-fill"></i>
-            Student Messages
+            <i class="bi bi-envelope-fill"></i> Student Messages
         </h2>
-    </div>
-    <div class="section-body">
+    </div> 
+    <div class="section-body"> 
         {% if messages_received %}
             <div class="table-responsive">
                 <table class="modern-table">
@@ -799,7 +843,7 @@
                         <tr>
                             <th>Student</th>
                             <th>Subject</th>
-                            <th>Message</th>
+                            <th>Message & Replies</th>
                             <th>Received At</th>
                             <th>Reply</th>
                         </tr>
@@ -811,19 +855,20 @@
                             <td>{{ msg.subject }}</td>
                             <td>
                                 {{ msg.message }}
-                                {% if msg.replies.all %}
+                                {% if msg.child_messages.all %}
                                     <div class="replies" style="margin-top:0.5rem; padding-left:1rem; border-left:2px solid #667eea;">
-                                        {% for reply in msg.replies.all %}
-                                            <p><strong>Teacher:</strong> {{ reply.message }} <small class="text-muted">({{ reply.created_at|date:"M d, Y H:i" }})</small></p>
+                                        {% for reply in msg.child_messages.all %}
+                                            <p>
+                                                <strong>Teacher Reply:</strong> {{ reply.message }} 
+                                                <small class="text-muted">({{ reply.created_at|date:"M d, Y H:i" }})</small>
+                                            </p>
                                         {% endfor %}
                                     </div>
                                 {% endif %}
                             </td>
                             <td>{{ msg.created_at|date:"M d, Y H:i" }}</td>
                             <td>
-                                <a href="{% url 'reply_to_student' msg.id %}" class="btn btn-sm btn-primary">
-                                    Reply
-                                </a>
+                                <a href="{% url 'reply_to_student' msg.id %}" class="btn btn-sm btn-primary">Reply</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -832,9 +877,7 @@
             </div>
         {% else %}
             <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="bi bi-envelope-x"></i>
-                </div>
+                <div class="empty-icon"><i class="bi bi-envelope-x"></i></div>
                 <h3 class="empty-title">No Messages</h3>
                 <p class="empty-text">You have not received any messages from students yet.</p>
             </div>
@@ -844,18 +887,45 @@
 
 
 
-{% endblock %}
-
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    // Initialize AOS
-    AOS.init({
-        duration: 800,
-        easing: 'ease-in-out',
-        once: true,
-        offset: 100
-    });
+AOS.init({
+    duration: 800,
+    easing: 'ease-in-out',
+    once: true,
+    offset: 100
+});
+
+{% if exam_performance %}
+const labels = [
+    {% for p in exam_performance %}
+        "{{ p.exam__title }}",
+    {% endfor %}
+];
+
+const avgScores = [
+    {% for p in exam_performance %}
+        {{ p.avg_score|default:0 }},
+    {% endfor %}
+];
+
+new Chart(document.getElementById('examChart'), {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Average Score',
+            data: avgScores,
+        }]
+    }
+});
+{% endif %}
 </script>
+{% endblock %}
+
+
 {% endblock %}
 

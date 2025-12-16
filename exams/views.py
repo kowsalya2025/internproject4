@@ -256,29 +256,48 @@ def student_dashboard(request):
 #     return render(request, 'exams/student_dashboard.html', context)
 
 
-
-
-
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.db.models import Avg, Max, Min, Count
+from .models import Subject, Exam, ExamAttempt, TeacherMessage
 
 @login_required
-@teacher_required
 def teacher_dashboard(request):
+    # Subjects and exams for this teacher
     subjects = Subject.objects.filter(teacher=request.user)
     exams = Exam.objects.filter(created_by=request.user)
+
+    # Total students who attempted at least once
     total_students = ExamAttempt.objects.filter(
         exam__created_by=request.user
-    ).values('student').distinct().count()
+    ).values("student").distinct().count()
 
-    messages_received = request.user.received_messages.all().order_by('-created_at')
+    # Exam performance stats
+    exam_performance = (
+        ExamAttempt.objects.filter(exam__created_by=request.user)
+        .values("exam__title", "exam_id")
+        .annotate(
+            total_attempts=Count("id"),
+            avg_score=Avg("score"),
+            max_score=Max("score"),
+            min_score=Min("score"),
+        )
+        .order_by("-avg_score")
+    )
+
+    # Messages from students
+    messages_received = TeacherMessage.objects.filter(
+        teacher=request.user, parent__isnull=True
+    ).order_by('-created_at')
 
     context = {
-        'subjects': subjects,
-        'exams': exams,
-        'total_students': total_students,
-        'messages_received': messages_received,
+        "subjects": subjects,
+        "exams": exams,
+        "total_students": total_students,
+        "exam_performance": exam_performance,
+        "messages_received": messages_received,
     }
-    return render(request, 'exams/teacher_dashboard.html', context)
-
+    return render(request, "exams/teacher_dashboard.html", context)
 
 
 
@@ -898,35 +917,79 @@ def contact_teacher(request):
     return render(request, 'contact_teacher.html', {'teachers': teachers})
 
 # exams/views.py
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import TeacherMessage, TeacherReply, User
 
+# ---------------- Teacher Inbox ----------------
 @login_required
 def teacher_inbox(request):
     if request.user.profile.user_type != 'teacher':
-        return redirect('home')  # only teachers can see this
+        return redirect('home')  # only teachers
 
-    messages_received = request.user.received_messages.all().order_by('-created_at')
-    return render(request, 'teacher_inbox.html', {'messages': messages_received})
+    # Get parent messages only
+    messages_received = TeacherMessage.objects.filter(
+        teacher=request.user, parent__isnull=True
+    ).order_by('-created_at')
 
-# exams/views.py
-from django.shortcuts import get_object_or_404
-from .models import TeacherMessage, TeacherReply
-from django.contrib.auth.decorators import login_required
+    return render(request, 'exams/teacher_dashboard.html', {
+        'messages_received': messages_received
+    })
 
+
+# ---------------- Reply to Student ----------------
 @login_required
 def reply_to_student(request, message_id):
-    msg = get_object_or_404(TeacherMessage, id=message_id)
+    if request.user.profile.user_type != 'teacher':
+        return redirect('home')
+
+    msg = get_object_or_404(TeacherMessage, id=message_id, teacher=request.user)
 
     if request.method == "POST":
         reply_text = request.POST.get("reply")
-        TeacherReply.objects.create(
-            message=msg,
-            teacher=request.user,
-            message_text=reply_text
-        )
-        return redirect("teacher_dashboard")  # redirect back to dashboard
+        if reply_text:
+            TeacherReply.objects.create(
+                message=msg,
+                teacher=request.user,
+                message_text=reply_text
+            )
+            messages.success(request, "Reply sent successfully!")
+            return redirect('teacher_inbox')
 
-    return render(request, "exams/reply_to_student.html", {"msg": msg})
+    return render(request, 'exams/reply_to_student.html', {"msg": msg})
+
+
+
+
+
+# exams/views.py
+# from django.shortcuts import get_object_or_404, redirect
+# from django.contrib.auth.decorators import login_required
+# from .models import TeacherMessage
+
+# @login_required
+# def reply_to_student(request, message_id):
+#     msg = get_object_or_404(TeacherMessage, id=message_id)
+
+#     # Only teacher of the message can reply
+#     if request.user != msg.teacher:
+#         return redirect("teacher_dashboard")
+
+#     if request.method == "POST":
+#         reply_text = request.POST.get("reply")
+#         if reply_text:
+#             TeacherMessage.objects.create(
+#                 sender=request.user,   # teacher sending the reply
+#                 teacher=msg.sender,    # student receives the reply
+#                 subject=f"Re: {msg.subject}",
+#                 message=reply_text,
+#                 parent=msg             # link to original message
+#             )
+#         return redirect("teacher_dashboard")
+
+#     return render(request, "exams/reply_to_student.html", {"msg": msg})
+
 
 
 from django.contrib.auth.decorators import login_required
@@ -935,13 +998,24 @@ from .models import TeacherMessage, TeacherReply
 
 @login_required
 def student_messages(request):
-    # Get all messages sent by this student
-    messages_sent = TeacherMessage.objects.filter(sender=request.user, parent__isnull=True).order_by('-created_at')
+    messages_received = TeacherMessage.objects.filter(
+        sender=request.user,  # student sent messages
+        parent__isnull=True
+    ).order_by('-created_at')
 
-    context = {
-        'messages_sent': messages_sent
-    }
-    return render(request, 'exams/student_messages.html', context)
+    return render(request, 'exams/student_messages.html', {'messages_received': messages_received})
+
+
+
+# @login_required
+# def student_messages(request):
+#     # Get all messages sent by this student
+#     messages_sent = TeacherMessage.objects.filter(sender=request.user, parent__isnull=True).order_by('-created_at')
+
+#     context = {
+#         'messages_sent': messages_sent
+#     }
+#     return render(request, 'exams/student_messages.html', context)
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -1613,5 +1687,66 @@ def analytics(request):
     )
     return render(request, 'exams/analytics.html', {'attempts': attempts})
 
+from django.db.models import Window, F
+from django.db.models.functions import Rank
 
+@login_required
+@teacher_required
+def exam_ranking(request, exam_id):
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+
+    rankings = (
+        ExamAttempt.objects.filter(
+            exam=exam,
+            submitted_at__isnull=False
+        )
+        .annotate(
+            rank=Window(
+                expression=Rank(),
+                order_by=F("score").desc()
+            )
+        )
+        .select_related("student")
+        .order_by("rank")
+    )
+
+    return render(request, "exams/exam_ranking.html", {
+        "exam": exam,
+        "rankings": rankings
+    })
+
+
+@login_required
+@teacher_required
+def grade_short_answers(request, attempt_id):
+    attempt = get_object_or_404(
+        ExamAttempt,
+        id=attempt_id,
+        exam__created_by=request.user
+    )
+
+    answers = Answer.objects.filter(
+        attempt=attempt,
+        question__question_type="short",
+        graded_by_teacher=False
+    )
+
+    if request.method == "POST":
+        total_added = 0
+        for ans in answers:
+            marks = float(request.POST.get(f"marks_{ans.id}", 0))
+            ans.marks_obtained = marks
+            ans.is_correct = marks > 0
+            ans.graded_by_teacher = True
+            ans.save()
+            total_added += marks
+
+        attempt.score += total_added
+        attempt.save()
+        return redirect("exam_result", attempt_id=attempt.id)
+
+    return render(request, "exams/grade_short_answers.html", {
+        "attempt": attempt,
+        "answers": answers
+    })
 

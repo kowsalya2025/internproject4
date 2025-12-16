@@ -1,0 +1,9 @@
+<form method="post">
+{% csrf_token %}
+{% for ans in answers %}
+<p>{{ ans.question.text }}</p>
+<textarea disabled>{{ ans.text_answer }}</textarea>
+<input type="number" name="marks_{{ ans.id }}" max="{{ ans.question.marks }}" required>
+{% endfor %}
+<button type="submit">Save Grades</button>
+</form>

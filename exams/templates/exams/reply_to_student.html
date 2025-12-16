@@ -1,10 +1,548 @@
-<!-- exams/templates/exams/reply_to_student.html -->
-<h3>Reply to {{ msg.sender.get_full_name|default:msg.sender.username }}</h3>
-<p><strong>Subject:</strong> {{ msg.subject }}</p>
-<p><strong>Message:</strong> {{ msg.message }}</p>
+{% extends 'base.html' %}
+{% load static %}
 
-<form method="POST">
-    {% csrf_token %}
-    <textarea name="reply" rows="4" class="form-control" placeholder="Type your reply here..." required></textarea>
-    <button type="submit" class="btn btn-primary mt-2">Send Reply</button>
-</form>
+{% block content %}
+
+<!-- exams/templates/exams/reply_to_student.html -->
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Back Button -->
+            <div class="mb-3">
+                <a href="{% url 'student_dashboard' %}" class="back-link">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Card Wrapper -->
+            <div class="message-card">
+                <div class="card-glow"></div>
+                
+                <div class="message-header">
+                    <div class="header-content">
+                        <div class="avatar-circle">
+                            {{ msg.sender.get_full_name.0|default:msg.sender.username.0|upper }}
+                        </div>
+                        <div class="header-text">
+                            <h4 class="sender-name">{{ msg.sender.get_full_name|default:msg.sender.username }}</h4>
+                            <p class="subject-line">{{ msg.subject }}</p>
+                        </div>
+                    </div>
+                    <div class="reply-badge">
+                        <i class="bi bi-reply-fill"></i>
+                    </div>
+                </div>
+
+                <div class="card-content">
+                    <!-- Original Message -->
+                    <div class="original-message">
+                        <div class="message-label">Original Message</div>
+                        <div class="message-text">{{ msg.message }}</div>
+                    </div>
+
+                    <!-- Reply Form -->
+                    <form method="POST" class="reply-form">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="replyTextarea" class="form-label">
+                                Your Reply
+                            </label>
+                            <div class="textarea-wrapper">
+                                <textarea 
+                                    id="replyTextarea" 
+                                    name="reply" 
+                                    rows="6"
+                                    class="reply-textarea"
+                                    placeholder="Type your message..."
+                                    required></textarea>
+                                <div class="textarea-border"></div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <a href="{% url 'student_dashboard' %}" class="btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn-primary">
+                                <span>Send Reply</span>
+                                <i class="bi bi-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-primary: #0f0f0f;
+    --bg-card: #1a1a1a;
+    --bg-elevated: #242424;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --text-tertiary: #6b6b6b;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --border: #2a2a2a;
+    --success: #10b981;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+body {
+    background: #fafafa;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Back Link */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.back-link:hover {
+    color: var(--accent);
+    transform: translateX(-4px);
+}
+
+/* Message Card */
+.message-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.card-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.1), transparent 70%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.message-card:hover .card-glow {
+    opacity: 1;
+}
+
+/* Header */
+.message-header {
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #f3f4f6;
+    position: relative;
+    z-index: 1;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    animation: fadeInLeft 0.6s ease-out;
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.avatar-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sender-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.subject-line {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.reply-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 20px;
+    animation: fadeInRight 0.6s ease-out;
+    transition: all 0.3s ease;
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.reply-badge:hover {
+    background: #e5e7eb;
+    transform: rotate(180deg);
+}
+
+/* Content */
+.card-content {
+    padding: 32px;
+}
+
+/* Original Message */
+.original-message {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--radius-md);
+    padding: 24px;
+    margin-bottom: 32px;
+    position: relative;
+    animation: fadeInUp 0.6s ease-out 0.2s both;
+    transition: all 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.original-message:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.original-message::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent), #8b5cf6);
+    border-radius: 3px 0 0 3px;
+}
+
+.message-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.message-text {
+    color: #374151;
+    font-size: 15px;
+    line-height: 1.7;
+    padding-left: 16px;
+    border-left: 2px solid #e5e7eb;
+}
+
+/* Form */
+.reply-form {
+    animation: fadeInUp 0.6s ease-out 0.3s both;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 12px;
+}
+
+.textarea-wrapper {
+    position: relative;
+}
+
+.reply-textarea {
+    width: 100%;
+    padding: 16px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #111827;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: var(--radius-md);
+    resize: vertical;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    min-height: 140px;
+}
+
+.reply-textarea::placeholder {
+    color: #9ca3af;
+}
+
+.reply-textarea:hover {
+    border-color: #d1d5db;
+    background: white;
+}
+
+.reply-textarea:focus {
+    background: white;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    transform: translateY(-1px);
+}
+
+.textarea-border {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), #8b5cf6);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.reply-textarea:focus + .textarea-border {
+    transform: scaleX(1);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    animation: fadeInUp 0.6s ease-out 0.4s both;
+}
+
+.btn-secondary,
+.btn-primary {
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-primary i {
+    transition: transform 0.3s ease;
+}
+
+.btn-primary:hover i {
+    transform: translateX(4px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .message-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 24px;
+    }
+
+    .reply-badge {
+        align-self: flex-end;
+    }
+
+    .card-content {
+        padding: 24px;
+    }
+
+    .action-buttons {
+        flex-direction: column-reverse;
+    }
+
+    .btn-secondary,
+    .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Loading State */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn-primary.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn-primary.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid white;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.6s linear infinite;
+}
+</style>
+
+
+{% endblock %}

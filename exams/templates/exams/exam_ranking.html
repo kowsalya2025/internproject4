@@ -1,0 +1,14 @@
+<table>
+<tr>
+    <th>Rank</th>
+    <th>Student</th>
+    <th>Score</th>
+</tr>
+{% for r in rankings %}
+<tr>
+    <td>{{ r.rank }}</td>
+    <td>{{ r.student.username }}</td>
+    <td>{{ r.score }}</td>
+</tr>
+{% endfor %}
+</table>
